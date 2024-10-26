@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        #messageContainer {
+            width: 100%;
+            max-width: 600px;
+            height: 400px;
+            overflow-y: scroll;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .sent {
+            color: blue;
+        }
+        .received {
+            color: green;
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <button id="startButton">Start Client</button>
+    <div id="messageContainer"></div>
+
+
+    <script>
+        document.getElementById('startButton').addEventListener('click', () => {
+            const ws = new WebSocket('ws://localhost:8765');
+            const messageContainer = document.getElementById('messageContainer');
+            const messages = [];  // Array to store messages temporarily
+    
+            ws.onopen = () => {
+                console.log('WebSocket connection established');
+                for (let i = 1; i <= 10000; i++) {
+                    const message = `Request [${i}] Hello world!`;
+                    ws.send(message);
+                    messages.push(`Sent: ${message}`);
+                }
+            };
+    
+            ws.onmessage = (event) => {
+                messages.push(`Received: ${event.data}`);
+            };
+    
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+    
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+    
+            // Function to display messages in batches every 100ms
+            setInterval(() => {
+                if (messages.length > 0) {
+                    // Take out messages in a batch to limit DOM updates
+                    const batch = messages.splice(0, 100); 
+                    batch.forEach(message => {
+                        const div = document.createElement('div');
+                        div.textContent = message;
+                        div.classList.add('message');
+                        messageContainer.appendChild(div);
+                    });
+                    messageContainer.scrollTop = messageContainer.scrollHeight;
+                }
+            }, 100);
+        });
+    </script>
+    
+</body>
+</html>
